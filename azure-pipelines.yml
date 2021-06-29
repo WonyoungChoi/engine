@@ -100,9 +100,6 @@ jobs:
     demands: agent.os -equals Linux
   workspace:
     clean: outputs
-  variables:
-  - name: upstreamVersion
-    value: 0fdb562ac8068ce3dda6b69aca3f355f4d1d2718
   steps:
   - checkout: self
     path: src/flutter
