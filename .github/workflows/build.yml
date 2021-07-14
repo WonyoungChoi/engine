@@ -1,0 +1,57 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64]
+    container:
+      image: ghcr.io/wonyoungchoi/ft-engine-build:test
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GHCR_TOKEN }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm, arm64, x86]
+        mode: [debug, release, profile]
+        include:
+          - arch: arm
+            triple: armv7l-tizen-linux-gnueabi
+          - arch: arm64
+            triple: aarch64-tizen-linux-gnu
+          - arch: x86
+            triple: i586-tizen-linux-gnueabi
+        exclude:
+          - arch: x86
+            mode: release
+          - arch: x86
+            mode: profile
+            
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: src/flutter
+    - name: sync
+      run: |
+        gclient config --name="src/flutter" --deps-file="DEPS" --unmanaged https://github.com/flutter-tizen/engine.git
+        gclient sync -f -D
+        sed -i 's/"-Wno-non-c-typedef-for-linkage",//g' src/build/config/compiler/BUILD.gn
+        sed -i 's/"-Wno-psabi",//g' src/build/config/compiler/BUILD.gn
+    - name: build
+      working-directory: ./src
+      run: |
+        flutter/tools/gn \
+          --target-os linux \
+          --linux-cpu ${{ matrix.arch }} \
+          --no-goma \
+          --target-toolchain /tizen_tools/toolchains \
+          --target-sysroot /tizen_tools/sysroot/${{ matrix.arch }} \
+          --target-triple ${{ matrix.triple }} \
+          --runtime-mode ${{ matrix.mode }} \
+          --enable-fontconfig \
+          --embedder-for-target \
+          --disable-desktop-embeddings \
+          --build-tizen-shell
+        ninja -C out/linux_${{ matrix.mode }}_${{ matrix.arch }}
