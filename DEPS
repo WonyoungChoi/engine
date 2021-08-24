@@ -64,13 +64,16 @@ vars = {
   'ios_tools_revision': '69b7c1b160e7107a6a98d948363772dc9caea46f',
 
   # Checkout Android dependencies only on platforms where we build for Android targets.
-  'download_android_deps': 'host_os == "mac" or host_os == "linux"',
+  'download_android_deps': False,
 
   # Checkout Windows dependencies only if we are building on Windows.
   'download_windows_deps' : 'host_os == "win"',
 
   # Checkout Linux dependencies only when building on Linux.
   'download_linux_deps': 'host_os == "linux"',
+
+  # Checkout Fuchsia SDK on Linux.
+  'download_linux_fuchsia_sdk': False,
 
   # An LLVM backend needs LLVM binaries and headers. To avoid build time
   # increases we can use prebuilts. We don't want to download this on every
@@ -130,8 +133,8 @@ deps = {
    # As part of integrating with Fuchsia, we should eventually remove all these
    # Chromium-style dependencies.
 
-  'src/ios_tools':
-   Var('chromium_git') + '/chromium/src/ios.git' + '@' + Var('ios_tools_revision'),
+   # 'src/ios_tools':
+   # Var('chromium_git') + '/chromium/src/ios.git' + '@' + Var('ios_tools_revision'),
 
   'src/third_party/icu':
    Var('chromium_git') + '/chromium/deps/icu.git' + '@' + 'e05b663d1c50b4e9ecc3ff9325f5158f1d071471',
@@ -375,20 +378,20 @@ deps = {
    Var('chromium_git') + '/external/gyp.git' + '@' + '4801a5331ae62da9769a327f11c4213d32fb0dad',
 
    # Headers for Vulkan 1.1
-   'src/third_party/vulkan':
-   Var('github_git') + '/KhronosGroup/Vulkan-Docs.git' + '@' + 'v1.1.91',
+   # 'src/third_party/vulkan':
+   # Var('github_git') + '/KhronosGroup/Vulkan-Docs.git' + '@' + 'v1.1.91',
 
    'src/third_party/swiftshader':
    Var('swiftshader_git') + '/SwiftShader.git' + '@' + '5d1e8540407c138f47028d64684f3da599430aa4',
 
-   'src/third_party/angle':
-   Var('github_git') + '/google/angle.git' + '@' + '06d194e2ae7b1d7e0eda0c0c911eff92dec7d3d1',
+   # 'src/third_party/angle':
+   # Var('github_git') + '/google/angle.git' + '@' + '06d194e2ae7b1d7e0eda0c0c911eff92dec7d3d1',
 
-   'src/third_party/angle/third_party/vulkan-deps/vulkan-headers/src':
-   Var('fuchsia_git') + '/third_party/Vulkan-Headers.git' + '@' + '5de4e8fab88ef0bd6994d9ddbcc864e3179b9e79',
+   # 'src/third_party/angle/third_party/vulkan-deps/vulkan-headers/src':
+   # Var('fuchsia_git') + '/third_party/Vulkan-Headers.git' + '@' + '5de4e8fab88ef0bd6994d9ddbcc864e3179b9e79',
 
-   'src/third_party/abseil-cpp':
-   Var('chromium_git') + '/chromium/src/third_party/abseil-cpp.git' + '@' + '2d8c1340f0350828f1287c4eaeebefcf317bcfc9',
+   # 'src/third_party/abseil-cpp':
+   # Var('chromium_git') + '/chromium/src/third_party/abseil-cpp.git' + '@' + '2d8c1340f0350828f1287c4eaeebefcf317bcfc9',
 
   'src/third_party/pkg/when':
    Var('dart_git') + '/when.git' + '@' + '0.2.0',
@@ -550,7 +553,7 @@ deps = {
         'version': '0Db2pEb0Ur2hDgldKWY6Y07zH0a9po6LFu4gG9L9W1IC'
        }
      ],
-     'condition': 'host_os == "linux"',
+     'condition': 'download_linux_fuchsia_sdk',
      'dep_type': 'cipd',
    },
 
