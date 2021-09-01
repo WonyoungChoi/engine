@@ -4,7 +4,7 @@
 
 FROM debian:buster-slim AS builder
 
-ARG GIT_BRANCH=master
+ARG GIT_BRANCH
 
 RUN apt-get update && \
     apt-get install -y git curl ca-certificates python && \
@@ -17,7 +17,11 @@ RUN git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_t
 
 # Sync engine and dependencies.
 WORKDIR /engine
-RUN git clone --depth 1 -b $GIT_BRANCH https://github.com/flutter-tizen/engine src/flutter
+RUN if [ -n "$GIT_BRANCH" ]; then \
+        git clone --depth 1 -b $GIT_BRANCH https://github.com/flutter-tizen/engine src/flutter; \
+    else \
+        git clone --depth 1 https://github.com/flutter-tizen/engine src/flutter; \
+    fi
 
 RUN gclient config --name="src/flutter" --deps-file="DEPS" --unmanaged https://github.com/flutter-tizen/engine.git
 RUN gclient setdep --var=download_android_deps=False --deps-file=src/flutter/DEPS
