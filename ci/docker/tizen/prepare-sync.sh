@@ -13,9 +13,6 @@ solutions = [
     "url"         : 'https://github.com/flutter-tizen/engine.git',
     "deps_file"   : 'DEPS',
     "managed"     : False,
-    "custom_deps" : {
-    },
-    "custom_vars": {},
   },
 ]
 EOF
