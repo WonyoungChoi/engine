@@ -6,6 +6,7 @@ on:
       - 'flutter-*'
     paths:
       - 'ci/docker/tizen/**'
+      - 'DEPS'
 
 jobs:
   build:
