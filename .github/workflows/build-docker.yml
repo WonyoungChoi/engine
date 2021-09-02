@@ -3,12 +3,13 @@ name: Build Docker
 on:
   push:
     branches:
-      - 'flutter-*'
-    paths:
-      - 'ci/docker/tizen/**'
-      - 'DEPS'
+      - 'docker-test'
+    # branches:
+    #   - 'flutter-*'
+    # paths:
+    #   - 'ci/docker/tizen/**'
+    #   - 'DEPS'
   workflow_dispatch:
-
 
 jobs:
   build:
@@ -28,4 +29,5 @@ jobs:
         file: ci/docker/tizen/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/build-engine:latest
+          ghcr.io/wonyoungchoi/build-engine:latest
+
