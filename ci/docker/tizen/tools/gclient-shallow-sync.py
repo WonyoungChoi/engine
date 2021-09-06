@@ -1,4 +1,4 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -6,6 +6,7 @@ import subprocess
 import concurrent.futures
 import gclient_eval
 import gclient_utils
+
 
 def run_git(args, cwd):
     if not args:
@@ -33,7 +34,8 @@ def checkout_deps(deps):
             if deps_data.get('dep_type') == 'git':
                 url = deps_data['url'].split('@')[0]
                 revision = deps_data['url'].split('@')[1]
-                futures.append(executor.submit(checkout_shallow_git, deps_name, url, revision))
+                futures.append(executor.submit(
+                    checkout_shallow_git, deps_name, url, revision))
         for future in concurrent.futures.as_completed(futures):
             future.result()
 
@@ -46,7 +48,7 @@ def main(argv):
         raise Exception('DEPS file does not exist')
     deps_contents = gclient_utils.FileRead(deps_file)
     local_scope = gclient_eval.Parse(deps_contents, deps_file)
-    checkout_deps(local_scope['deps'])       
+    checkout_deps(local_scope['deps'])
 
 
 if '__main__' == __name__:
