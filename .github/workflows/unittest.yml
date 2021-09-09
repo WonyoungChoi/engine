@@ -1,0 +1,52 @@
+name: Unit Tests
+
+on:
+  push:
+    branches:
+      - 'flutter-*-tizen'
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flutter-tizen/build-engine:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    env:
+      CACHE_PATH: src/out/host_debug
+      CACHE_PREFIX: out-build-host_debug
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src/flutter
+          fetch-depth: 0
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.CACHE_PATH }}
+          key: ${{ env.CACHE_PREFIX }}-${{ github.sha }}
+          restore-keys: |
+            ${{ env.CACHE_PREFIX }}-
+
+      - name: gclient sync
+        run: |
+          gclient-prepare-sync.sh --reduce-deps --shallow-sync
+          gclient sync -v --no-history --shallow
+
+      - name: check format
+        run: |
+          src/flutter/ci/format.sh
+
+      - name: build for testing
+        run: |
+          cache-checksum.sh restore $CACHE_PATH
+          build-engine.sh --build-target flutter_tizen_unittests
+          cache-checksum.sh save $CACHE_PATH
+
+      - name: run unittests
+        run: |
+          $CACHE_PATH/flutter_tizen_unittests
