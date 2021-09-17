@@ -1,0 +1,20 @@
+name: Build
+
+on:
+  pull_request:
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch: [arm]
+        mode: [release]
+        include:
+          - arch: arm
+            triple: armv7l-tizen-linux-gnueabi
+
+    steps:
+    - uses: actions/checkout@v2
