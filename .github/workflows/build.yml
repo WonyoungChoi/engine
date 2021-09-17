@@ -1,28 +1,20 @@
-name: Check Symbol
+name: Build
 
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types:
-      - requested
+  pull_request:
+
 
 jobs:
-  check-symbol:
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch: [arm]
+        mode: [release]
+        include:
+          - arch: arm
+            triple: armv7l-tizen-linux-gnueabi
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        repository: WonyoungChoi/PrivateData
-        token: ${{ secrets.MY_PAT }}
-
-    - name: Examin Environment
-      run: |
-        ls -al
-        env
-
-    - name: Test Script
-      uses: actions/github-script@v4
-      with:
-        script: |
-          console.log(JSON.stringify(context.payload))
