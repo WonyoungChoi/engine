@@ -46,6 +46,7 @@ def check_symbol(sofile, allowlist):
             continue
         if symbol.name in allowlist:
             continue
+        print(symbol.name)
         not_allowed.append(symbol)
 
     if not_allowed:

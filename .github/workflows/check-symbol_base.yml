@@ -1,0 +1,48 @@
+name: Check Symbols
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - requested
+      - completed
+
+jobs:
+  check:
+    if: ${{ github.event.workflow_run.event == 'pull_request' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: WonyoungChoi/workflow-run-status-action@main
+        with:
+          message_on_pending: "Waiting for build finish"
+          message_on_success: "All symbols are valid"
+
+      - uses: actions/checkout@v2
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+      - uses: actions/checkout@v2
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        with:
+          repository: flutter-tizen/tizen_allowlist
+          token: ${{ secrets.TIZENAPI_TOKEN }}
+          path: tizen_allowlist
+
+      - name: download artifacts
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        uses: TizenAPI/tizenfx-build-actions/download-workflow-artifacts@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: tizen-arm-release
+          path: artifacts
+
+      - name: check symbols
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        env:
+          ALLOWLIST: tizen_allowlist/4.0.0_native_whitelist_wearable_v12.txt
+        run: |
+          python ci/docker/tizen/tools/check-symbol.py --allowlist=$ALLOWLIST \
+            artifacts/libflutter_engine.so \
+            artifacts/libflutter_tizen_wearable.so
