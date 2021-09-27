@@ -1,0 +1,104 @@
+name: Check Symbols
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - requested
+      - completed
+
+jobs:
+  pending:
+    if: |
+      github.event.action == 'requested' &&
+      github.event.workflow_run.event == 'pull_request'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: commit status
+        uses: actions/github-script@v5
+        with:
+          script: |
+            for (const pr of context.payload.workflow_run.pull_requests) {
+              if (pr.base.repo.url == context.payload.repository.url) {
+                github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: pr.head.sha,
+                  context: 'Check Symbols',
+                  state: 'pending',
+                  description: 'Waiting for build finish'
+                });
+              }
+            }
+
+  check:
+    if: |
+      github.event.action == 'completed' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: flutter-tizen/tizen_allowlist
+          token: ${{ secrets.TIZENAPI_TOKEN }}
+          path: tizen_allowlist
+
+      - name: download artifacts
+        uses: TizenAPI/tizenfx-build-actions/download-workflow-artifacts@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: tizen-arm-release
+          path: artifacts
+
+      - name: check symbols
+        id: check
+        env:
+          ALLOWLIST: tizen_allowlist/4.0.0_native_whitelist_wearable_v12.txt
+        run: |
+          python ci/docker/tizen/tools/check-symbol.py --allowlist=$ALLOWLIST \
+            artifacts/libflutter_engine.so \
+            artifacts/libflutter_tizen_wearable.so
+
+      - name: commit success status
+        if: ${{ success() }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            for (const pr of context.payload.workflow_run.pull_requests) {
+              if (pr.base.repo.url == context.payload.repository.url) {
+                github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: pr.head.sha,
+                  context: "Check Symbols",
+                  state: 'success',
+                  description: 'All symbols are valid'
+                });
+              }
+            }
+
+      - name: commit failure status
+        if: ${{ failure() }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            for (const pr of context.payload.workflow_run.pull_requests) {
+              if (pr.base.repo.url == context.payload.repository.url) {
+                github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: pr.head.sha,
+                  context: "Check Symbols",
+                  state: 'failure',
+                  description: 'Failed in checking symbols',
+                  target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+                });
+              }
+            }
