@@ -58,7 +58,6 @@ jobs:
           path: artifacts
 
       - name: check symbols
-        id: check
         env:
           ALLOWLIST: tizen_allowlist/4.0.0_native_whitelist_wearable_v12.txt
         run: |
