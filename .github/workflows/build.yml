@@ -82,14 +82,14 @@ jobs:
         with:
           name: host-${{ matrix.arch }}-${{ matrix.mode }}
           path: |
-            src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
             src/out/${{ env.OUTPUT_NAME }}/*_unittests
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'linux'
         with:
           name: tizen-${{ matrix.arch }}-${{ matrix.mode }}
-          path: src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
+          path: |
+            src/out/${{ env.OUTPUT_NAME }}/libflutter_*.so
 
       - uses: actions/upload-artifact@v2
         if: matrix.arch == 'arm' && matrix.mode == 'release'
