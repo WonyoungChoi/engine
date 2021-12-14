@@ -390,6 +390,13 @@ def to_gn_args(args):
     if args.target_os in ['android'] and gn_args['target_cpu'] in ['x64' , 'arm64']:
       gn_args['dart_use_compressed_pointers'] = True
 
+    # Overwrite arguments for building tizen files on MacOS.
+    if args.macos_build_tizen:
+      gn_args['allow_deprecated_api_calls'] = False
+      gn_args['skia_use_metal'] = False
+      gn_args['shell_enable_metal'] = False
+      gn_args['use_default_linux_sysroot'] = False
+
     return gn_args
 
 def parse_args(args):
@@ -495,6 +502,8 @@ def parse_args(args):
                       help='Whether to use a prebuilt Dart SDK instead of building one. This defaults to ' +
                       'true and is enabled on CI.')
   parser.add_argument('--no-prebuilt-dart-sdk', dest='prebuilt_dart_sdk', action='store_false')
+
+  parser.add_argument('--macos-build-tizen', default=False, action='store_true')
 
   # Sanitizers.
   parser.add_argument('--asan', default=False, action='store_true')
