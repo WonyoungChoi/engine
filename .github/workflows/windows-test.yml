@@ -1,0 +1,60 @@
+name: Windows Test
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    strategy:
+      matrix:
+        arch: [arm, arm64]
+        mode: [release, profile]
+
+    steps:
+      - name: Checkout engine
+        run: |
+          mkdir C:\workspace\engine\src\flutter
+          cd C:\workspace\engine\src\flutter
+          git init --quiet
+          git remote add origin https://github.com/${{ github.repository }}
+          git fetch --depth 1 origin ${{ github.sha }}
+          git checkout FETCH_HEAD
+      
+      - name: Setup environments
+        run: |
+          Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Force
+          echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $Env:GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" >> $Env:GITHUB_ENV
+          echo "WINDOWSSDKDIR=C:\Program Files (x86)\Windows Kits\10" >> $Env:GITHUB_ENV
+
+      - name: Install depot_tools
+        run: |
+          Invoke-WebRequest -Uri https://storage.googleapis.com/chrome-infra/depot_tools.zip -OutFile depot_tools.zip
+          7z x -y -o"C:\workspace\depot_tools" .\depot_tools.zip
+          Remove-Item depot_tools.zip
+          echo "C:\workspace\depot_tools" >> $Env:GITHUB_PATH
+
+      - name: Print environment variables
+        run: |
+          gci env:*
+          Get-PSDrive
+
+      - name: GClient Sync
+        working-directory: C:\workspace\engine
+        run: |
+          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient sync -v --no-history --shallow
+
+      - name: Build
+        working-directory: C:\workspace\engine\src
+        run: |
+          python .\flutter\tools\gn --target-os=linux --linux-cpu=${{ matrix.arch }} --no-goma --runtime-mode=${{ matrix.mode }}
+          ninja -C .\out\linux_${{ matrix.mode }}_${{ matrix.arch }} gen_snapshot
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tizen-${{ matrix.arch }}-${{ matrix.mode }}_windows-x64
+          path: |
+            C:\workspace\engine\src\out\linux_${{ matrix.mode }}_${{ matrix.arch }}\gen_snapshot.exe
