@@ -121,6 +121,7 @@ jobs:
         run: |
           mkdir C:\workspace\engine\src\flutter
           cd C:\workspace\engine\src\flutter
+          git config --global core.autocrlf true
           git init --quiet
           git remote add origin https://github.com/${{ github.repository }}
           git fetch --depth 1 origin ${{ github.sha }}
@@ -142,13 +143,15 @@ jobs:
       - name: GClient Sync
         working-directory: C:\workspace\engine
         run: |
-          gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
+          gclient config --name=src\flutter --unmanaged https://github.com/flutter-tizen/engine
+          $env:PYTHONPATH="C:\workspace\depot_tools"
+          python3 src\flutter\ci\tizen\gclient-shallow-sync.py src\flutter\DEPS
           gclient sync -v --no-history --shallow
 
       - name: Build
         working-directory: C:\workspace\engine\src
         run: |
-          python .\flutter\tools\gn --target-os=linux --linux-cpu=${{ matrix.arch }} --no-goma --runtime-mode=${{ matrix.mode }}
+          python3 .\flutter\tools\gn --target-os=linux --linux-cpu=${{ matrix.arch }} --no-goma --runtime-mode=${{ matrix.mode }}
           ninja -C .\out\linux_${{ matrix.mode }}_${{ matrix.arch }} gen_snapshot
 
       - uses: actions/upload-artifact@v2
@@ -179,6 +182,7 @@ jobs:
         run: |
           gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
           gclient setdep --var=download_android_deps=False --deps-file=src/flutter/DEPS
+          PYTHONPATH="$PWD/depot_tools" python3 ./src/flutter/ci/tizen/gclient-shallow-sync.py src/flutter/DEPS
           gclient sync -v --no-history --shallow
       
       - name: Build
