@@ -137,13 +137,7 @@ jobs:
         run: |
           Invoke-WebRequest -Uri https://storage.googleapis.com/chrome-infra/depot_tools.zip -OutFile depot_tools.zip
           7z x -y -o"C:\workspace\depot_tools" .\depot_tools.zip
-          Remove-Item depot_tools.zip
           echo "C:\workspace\depot_tools" >> $Env:GITHUB_PATH
-
-      - name: Print environment variables
-        run: |
-          gci env:*
-          Get-PSDrive
 
       - name: GClient Sync
         working-directory: C:\workspace\engine
@@ -181,10 +175,6 @@ jobs:
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
           echo "$PWD/depot_tools" >> $GITHUB_PATH
 
-      - name: Print environments
-        run: |
-          printenv
-
       - name: GClient Sync
         run: |
           gclient config --name=src/flutter --unmanaged https://github.com/flutter-tizen/engine
@@ -194,9 +184,9 @@ jobs:
       - name: Build
         working-directory: ./src
         run: |
-          # Change host_toolchain to mac/clang_x64
+          # Change host_toolchain to mac/clang_x64.
           sed -i "" "s|//build/toolchain/linux:clang_$host_cpu|//build/toolchain/mac:clang_$host_cpu|g" build/config/BUILDCONFIG.gn
-          # Pass dummy toolchain values to use custom toolchain settings
+          # Pass dummy toolchain values to use custom toolchain settings.
           python3 ./flutter/tools/gn --linux --linux-cpu=${{ matrix.arch }} --runtime-mode=${{ matrix.mode }} \
             --no-goma --macos-build-tizen \
             --target-toolchain _ --target-sysroot _ --target-triple _
